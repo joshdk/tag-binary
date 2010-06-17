@@ -12,6 +12,11 @@
 
 #define ROW_BUFFER_SIZE		(NAME_BUFFER_SIZE+TAG_BUFFER_SIZE*TAG_COUNT)
 
+#define INVALID_OFFSET 		-1
+#define INVALID_SIZE			-1
+
+#define TRUE 							1
+#define FALSE							0
 
 struct info{
 	int header;

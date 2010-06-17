@@ -20,33 +20,52 @@ int isalnum(int);
 void search(const char *,char **,int);
 
 
-void printf_r(const char*,int,char**);
-int valid_tag(const char*);
+//void printf_r(const char*,int,char**);
+//int valid_tag(const char*);
+
+int valid_tag(const char *,const char *);
 int contains(const char*,char**,int);
 int subset(char**,char**,int,int,int);
+char **get_tags(char **,int,const char *,int *);
 
 
 int query(char*);
-int tag(char*,int,char**);
+int tag(char*,char**,int);
 int append_row(FILE*);
-int tag_row(int,FILE*,char*,int,char**);
+int tag_row(int,FILE*,char*,char**,int);
 
-
-
-
-
-void printf_r(const char *format,int arrc,char **arrv){
-	for(int n=0;n<arrc;++n)
-		printf(format,arrv[n]);
+char **get_tags(char **argv,int argc,const char *mods,int *count){
+	//printf("hello?\n");
+//	int total=0;
+	*count=0;
+	char **tags=malloc(argc*sizeof(*tags));
+	//*
+//total=0;
+	for(int n=2;n<argc-1;++n){
+		if(valid_tag(argv[n],mods)){
+			tags[(*count)++]=argv[n];
+			printf("    args: %s\n",argv[n]);
+		}
+	}
+	if(*count==0){free(tags);return NULL;}
+	return tags;
 }
 
 
+//*
+void printf_r(const char *format,char **arrv,int arrc){
+	for(int n=0;n<arrc;++n)
+		printf(format,arrv[n]);
+}
+//*/
+//*
 int contains(const char *str,char **arr,int size){
 	for(int n=size;n--;)
 		if(!strcmp(str,arr[n]))
 			return 1;
 	return 0;
 }
+//*/
 
 int subset(char **sub,char **set,int size,int to,int from){
 	int o=0;
@@ -56,20 +75,49 @@ int subset(char **sub,char **set,int size,int to,int from){
 }
 
 
-
+/*
 int valid_tag(const char *tag){
 	for(int n=strlen(tag);--n;)
 		if(!isalnum(tag[n]))return 0;
 	return isalnum(tag[0])||tag[0]=='+'||tag[0]=='-';
 }
+//*/
+
+int contains_char(const char *,char);
+int contains_char(const char *str,char l){
+	for(int n=strlen(str);n--;)
+		if(str[n]==l)return 1;
+	return 0;
+}
 
 
 
+int valid_tag(const char *tag,const char *mods){
+	int len=strlen(tag);
+	if(len>17){
+		return 0;
+	}
+	if(len==17 && !contains_char(mods,tag[0])){
+		return 0;
+	}
+	if(!contains_char(mods,tag[0]) && !isalnum(tag[0])){
+		return 0;
+	}
+	for(int n=len;--n;){
+		if(!isalnum(tag[n]))return 0;
+	}	
+	return 1;
+}
 
 
 
 
 int main(int argc,char **argv) {
+
+
+//printf("result: %d\n",valid_tag("-0123","+-"));
+
+//return 0;
 
 
 //*
@@ -98,12 +146,14 @@ int main(int argc,char **argv) {
 
 
 	if(!strcmp(argv[1],"-t") || !strcmp(argv[1],"--tag")){//tag a file
-		//printf("tagging mode\n");
-		char **tags=(char**)malloc(sizeof(char*)*(argc-3));
-		subset(tags,argv,argc,2,argc-2);
-		//printf_r("[%s]\n",argc-3,tags);
-		tag(argv[argc-1],argc-3,tags);
-		free(tags);
+		int tagc=0;
+		char **tags;
+		if(tags=get_tags(argv,argc,"+-",&tagc)){
+			tag(argv[argc-1],tags,tagc);
+			free(tags);tags=NULL;
+		}else{
+			fprintf(stderr,"tag: too many invalid tag(s)\n",argv[argc-1]);
+		}
 
 	}else if(!strcmp(argv[1],"-f") || !strcmp(argv[1],"--find")){//find file(s)
 		//printf("find mode\n");
@@ -117,19 +167,30 @@ int main(int argc,char **argv) {
 			fprintf(stderr,"tag: `%s\': Not a directory\n",argv[argc-1]);
 			return 0;
 		}
-		char **tags=(char**)malloc(sizeof(char*)*(argc-3));
-		subset(tags,argv,argc,2,argc-2);
-		int len=strlen(argv[argc-1]);
-		char *path=malloc(sizeof(char)*len+4);
-		strcpy(path,argv[argc-1]);
-		if(path[len-1]!='/'){
-			sprintf(path,"%s/",path);
+		//char **tags=(char**)malloc(sizeof(char*)*(argc-3));
+		//subset(tags,argv,argc,2,argc-2);
+
+		int tagc=0;
+		char **tags;
+		if(tags=get_tags(argv,argc,"+-~",&tagc)){
+
+			int len=strlen(argv[argc-1]);
+			char *path=malloc((len+4)*sizeof(*path));
+			strcpy(path,argv[argc-1]);
+			if(path[len-1]!='/'){
+				sprintf(path,"%s/",path);
+			}
+			search(path,tags,tagc);
+			free(path);path=NULL;
+			free(tags);tags=NULL;
+
+
+		}else{
+			fprintf(stderr,"tag: too many invalid tag(s)\n",argv[argc-1]);
 		}
-		//printf_r("[%s]\n",argc-3,tags);
-		search(path,tags,argc-3);
-		//tag(argv[argc-1],argc-3,tags);
-		free(path);
-		free(tags);
+
+
+
 		
 	}else if(!strcmp(argv[1],"-q") || !strcmp(argv[1],"--query")){//query file tags
 		
@@ -153,14 +214,14 @@ int append_row(FILE *ftags){
 	int offset=ftell(ftags);
 	char buffer[ROW_BUFFER_SIZE];
 	memset(buffer,'\0',ROW_BUFFER_SIZE);
-	fwrite(buffer,1,ROW_BUFFER_SIZE,ftags);
+	fwrite(buffer,sizeof(char),ROW_BUFFER_SIZE,ftags);
 	return offset;
 }
 
 
 
 
-int tag_row(int offset,FILE *ftags,char *filename,int tagc,char **tags){
+int tag_row(int offset,FILE *ftags,char *filename,char **tags,int tagc){
 	struct row rowdata;
 	memset(rowdata.name,'\0',NAME_BUFFER_SIZE);
 	strcpy(rowdata.name,filename);
@@ -168,7 +229,7 @@ int tag_row(int offset,FILE *ftags,char *filename,int tagc,char **tags){
 	fseek(ftags,offset+NAME_BUFFER_SIZE,SEEK_SET);
 	int count=0;
 	for(int n=0;n<TAG_COUNT;++n){
-		fread(rowdata.tags[n],TAG_BUFFER_SIZE,1,ftags);
+		fread(rowdata.tags[n],sizeof(char),TAG_BUFFER_SIZE,ftags);
 		if(rowdata.tags[n][0])++count;		
 		//printf("TAG %d: [%s]\n",n+1,rowdata.tags[n]);
 	}
@@ -228,14 +289,14 @@ int tag_row(int offset,FILE *ftags,char *filename,int tagc,char **tags){
 	
 	fseek(ftags,offset,SEEK_SET);
 	if(count>0){
-		fwrite(rowdata.name,NAME_BUFFER_SIZE,1,ftags);
+		fwrite(rowdata.name,sizeof(char),NAME_BUFFER_SIZE,ftags);
 		for(int n=0;n<TAG_COUNT;++n){
-			fwrite(rowdata.tags[n],TAG_BUFFER_SIZE,1,ftags);
+			fwrite(rowdata.tags[n],sizeof(char),TAG_BUFFER_SIZE,ftags);
 		}
 	}else{
 		char buf[ROW_BUFFER_SIZE];
 		memset(buf,'\0',ROW_BUFFER_SIZE);
-		fwrite(buf,ROW_BUFFER_SIZE,1,ftags);
+		fwrite(buf,sizeof(char),ROW_BUFFER_SIZE,ftags);
 	}
 		
 return count>1;
@@ -252,7 +313,7 @@ return count>1;
 
 
 
-int tag(char *target,int tagc,char **tags){
+int tag(char *target,char **tags,int tagc){
 	if(tagc<1){
 		fprintf(stderr,"tag: No tags specified\n");
 		return 0;
@@ -271,7 +332,7 @@ int tag(char *target,int tagc,char **tags){
 		return 0;
 	}
 	
-	char *path=(char*)malloc(strlen(target)+8);
+	char *path=malloc((strlen(target)+8)*sizeof(*path));
 	strcpy(path,target);
 	int pathlen=strlen(path);
 	char *name;
@@ -285,7 +346,7 @@ int tag(char *target,int tagc,char **tags){
 			path[pathlen+1]='\0';
 		}
 		//printf("after: [%s]\n",path);
-		name=(char*)malloc(2);
+		name=malloc(2*sizeof(*name));
 		strcpy(name,".");
 			//dir=
 
@@ -298,7 +359,7 @@ int tag(char *target,int tagc,char **tags){
 			}
 		}
 		int offset=n;
-		name=(char*)malloc(pathlen-n+2);
+		name=malloc((pathlen-n+2)*sizeof(*name));
 		for(int o=0;n<pathlen;++n,++o){
 			//printf("[%c]\n",path[n]);
 			name[o]=path[n];
@@ -322,7 +383,7 @@ int tag(char *target,int tagc,char **tags){
 	//*
 	FILE *ftags;
 	struct info i;
-	int ventries=0,rentries=0,existing=0,offset=-1,entries_offset=-1;
+	int ventries=0,rentries=0,existing=0,offset=INVALID_OFFSET,entries_offset=-1;
 
 
 	if((ftags=fopen(path,"rb+"))!=NULL){
@@ -330,15 +391,15 @@ int tag(char *target,int tagc,char **tags){
 		fread(&i,sizeof(struct info),1,ftags);
 		printf("magic number: [%x]\n",i.header);
 		entries_offset=ftell(ftags);
-		fread(&ventries,4,1,ftags);
-		fread(&rentries,4,1,ftags);
+		fread(&ventries,sizeof(int),1,ftags);
+		fread(&rentries,sizeof(int),1,ftags);
 		char filename[NAME_BUFFER_SIZE];
 		for(int n=0;n<ventries;++n){
 			int pos=ftell(ftags);
 			memset(filename,'\0',NAME_BUFFER_SIZE);
-			fread(filename,1,NAME_BUFFER_SIZE,ftags);
+			fread(filename,sizeof(char),NAME_BUFFER_SIZE,ftags);
 			printf("current row name: %s\n",filename);
-			if(filename[0]=='\0' && offset==0){//found the first blank row
+			if(filename[0]=='\0' && offset==INVALID_OFFSET){//found the first blank row
 				offset=pos;
 				printf("found an empty row at offset: %d\n",offset);
 			}else if(!strcmp(name,filename)){//found the target row
@@ -352,7 +413,7 @@ int tag(char *target,int tagc,char **tags){
 			fseek(ftags,TAG_COUNT*TAG_BUFFER_SIZE,SEEK_CUR);
 			
 		}
-		if(offset==-1){
+		if(offset==INVALID_OFFSET){
 			printf("appending new row\n");
 			offset=append_row(ftags);
 			++ventries;
@@ -370,8 +431,8 @@ int tag(char *target,int tagc,char **tags){
 		//int entries_offset=ftell(ftags);
 
 		entries_offset=ftell(ftags);
-		fwrite(&ventries,4,1,ftags);
-		fwrite(&rentries,4,1,ftags);
+		fwrite(&ventries,sizeof(int),1,ftags);
+		fwrite(&rentries,sizeof(int),1,ftags);
 		offset=append_row(ftags);
 		++ventries;
 		printf("row offset: [%d]\n",offset);
@@ -385,7 +446,7 @@ int tag(char *target,int tagc,char **tags){
 	
 
 	printf("row offset: [%d]\n",offset);
-	if(tag_row(offset,ftags,name,tagc,tags)){//if data was added
+	if(tag_row(offset,ftags,name,tags,tagc)){//if data was added
 		if(!existing){//if this row was just appended
 			//--ventries;
 			++rentries;
@@ -400,8 +461,8 @@ int tag(char *target,int tagc,char **tags){
 
 		fseek(ftags,entries_offset,SEEK_SET);
 		
-		fwrite(&ventries,4,1,ftags);
-		fwrite(&rentries,4,1,ftags);
+		fwrite(&ventries,sizeof(int),1,ftags);
+		fwrite(&rentries,sizeof(int),1,ftags);
 
 	fclose(ftags);
 
@@ -447,7 +508,7 @@ int query(char *target){
 		return 0;
 	}
 	
-	char *path=(char*)malloc(strlen(target)+8);
+	char *path=malloc((strlen(target)+8)*sizeof(*path));
 	strcpy(path,target);
 	int pathlen=strlen(path);
 	char *name;
@@ -461,7 +522,7 @@ int query(char *target){
 			path[pathlen+1]='\0';
 		}
 		//printf("after: [%s]\n",path);
-		name=(char*)malloc(2);
+		name=malloc(2*sizeof(*name));
 		strcpy(name,".");
 			//dir=
 
@@ -474,7 +535,7 @@ int query(char *target){
 			}
 		}
 		int offset=n;
-		name=(char*)malloc(pathlen-n+2);
+		name=malloc((pathlen-n+2)*sizeof(*name));
 		for(int o=0;n<pathlen;++n,++o){
 			//printf("[%c]\n",path[n]);
 			name[o]=path[n];
@@ -500,25 +561,25 @@ int query(char *target){
 	
 	struct info i;
 
-	fread(&i,1,sizeof(struct info),ftags);
+	fread(&i,sizeof(struct info),1,ftags);
 	//printf("Header: [%x]\n",tf->t_info.header);
 	if(i.header!=TAGFILE_MAGIC){return 0;}
 
 	int ventries=0,rentries=0;
-	fread(&ventries,1,4,ftags);
-	fread(&rentries,1,4,ftags);
+	fread(&ventries,sizeof(int),1,ftags);
+	fread(&rentries,sizeof(int),1,ftags);
 	
 	char rowname[NAME_BUFFER_SIZE+1],rowtag[TAG_BUFFER_SIZE+1];
 	rowname[NAME_BUFFER_SIZE]=rowtag[TAG_BUFFER_SIZE]='\0';
 
 	for(int n=0;n<ventries;++n){
-		fread(rowname,1,NAME_BUFFER_SIZE,ftags);
+		fread(rowname,sizeof(char),NAME_BUFFER_SIZE,ftags);
 		if(strcmp(rowname,name)){
 			fseek(ftags,TAG_BUFFER_SIZE*TAG_COUNT,SEEK_CUR);
 			continue;
 		}
 		for(int c=0;c<TAG_COUNT;++c){
-			fread(rowtag,1,TAG_BUFFER_SIZE,ftags);
+			fread(rowtag,sizeof(char),TAG_BUFFER_SIZE,ftags);
 			if(rowtag[0]!='\0'){
 				printf("%s\n",rowtag);
 			}
@@ -539,27 +600,27 @@ int query(char *target){
 
 
 
-int search_tagfile(const char *,FILE*,int,char**);
+//int search_tagfile(const char *,FILE*,int,char**);
 
-int search_tagfile(const char *path,FILE *ftags,int tagc,char **tags){
+int search_tagfile(const char *path,FILE *ftags,char **tags,int tagc){
 
 	struct info i;
 	char name[NAME_BUFFER_SIZE+1],tag[TAG_BUFFER_SIZE+1];
 	
 
-	fread(&i,1,sizeof(struct info),ftags);
+	fread(&i,sizeof(struct info),1,ftags);
 	//printf("Header: [%x]\n",tf->t_info.header);
 	if(i.header!=TAGFILE_MAGIC){return 0;}
 
 	int ventries=0,rentries=0;
-	fread(&ventries,1,4,ftags);
-	fread(&rentries,1,4,ftags);
+	fread(&ventries,sizeof(int),1,ftags);
+	fread(&rentries,sizeof(int),1,ftags);
 
 	for(int n=0;n<ventries;++n){
 		int offset=ftell(ftags);
-		fread(name,1,NAME_BUFFER_SIZE,ftags);
+		fread(name,sizeof(char),NAME_BUFFER_SIZE,ftags);
 		for(int m=0;m<TAG_COUNT;++m){
-			fread(tag,1,TAG_BUFFER_SIZE,ftags);
+			fread(tag,sizeof(char),TAG_BUFFER_SIZE,ftags);
 			int trip=0;
 			for(int l=0;l<tagc;++l){
 				if(!strcmp(tag,tags[l])){//found a match!
@@ -593,7 +654,7 @@ return 1;
 
 
 
-void search(const char *path,char **tags,int size){
+void search(const char *path,char **tags,int tagc){
 
 
 	struct dirent *dp;
@@ -604,7 +665,7 @@ void search(const char *path,char **tags,int size){
 
 	while((dp=readdir(dir))!=NULL){
 
-		char *temp=(char*)malloc(strlen(path)+strlen(dp->d_name)+4);
+		char *temp=malloc((strlen(path)+strlen(dp->d_name)+4)*sizeof(*temp));
 		sprintf(temp,"%s%s",path,dp->d_name);
 
 		lstat(temp,&s);
@@ -613,14 +674,14 @@ void search(const char *path,char **tags,int size){
 			if(!strcmp(dp->d_name,".tags")){
 				//printf("parsing: [%s]\n",temp);
 				FILE *ftags;
-				if((ftags=fopen(temp,"r"))!=NULL){search_tagfile(path,ftags,size,tags);}
+				if((ftags=fopen(temp,"r"))!=NULL){search_tagfile(path,ftags,tags,tagc);}
 				fclose(ftags);
 
 			}
 		}else if(S_ISDIR(s.st_mode) && !S_ISLNK(s.st_mode)){//if directory
 			if(strcmp(dp->d_name,".") && strcmp(dp->d_name,"..")){
 				sprintf(temp,"%s/",temp);
-				search(temp,tags,size);
+				search(temp,tags,tagc);
 			}
 		}
 
