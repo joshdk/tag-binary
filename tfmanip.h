@@ -77,7 +77,11 @@ int search_tagfile(const char *path,FILE *ftags,char **tags,int tagc){
 			int trip=0;
 			for(int l=0;l<tagc;++l){
 				if(!strcmp(tag,tags[l])){//found a match!
-					printf("%s%s\n",path,name);
+					if(strcmp(name,".")){
+						printf("%s%s\n",path,name);
+					}else{
+						printf("%s\n",path);//ignore entries with the name of "."
+					}
 					trip=1;
 					break;
 				}
