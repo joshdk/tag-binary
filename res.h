@@ -10,7 +10,7 @@
 #define VERSION_REVISION  0
 
 char *helptext="\
-Usage: tag [OPTION] [TAGS]... FILE\n\
+Usage: %s [OPTION] [TAGS]... FILE\n\
 Tag or search for files by keywords\n\
 \n\
   -t, --tag       add or remove tags from FILE\n\
