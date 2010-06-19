@@ -1,5 +1,5 @@
-#ifndef _TFMANIP_H_
-#define _TFMANIP_H_
+#ifndef TFMANIP_H
+#define TFMANIP_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,8 +39,89 @@ struct row{
 
 
 int read_row(struct row *,FILE *);
-int search_tagfile(const char *,FILE *,char **,int);
+int search_tagfile(const char *,char **,int,FILE *);
 int query_tagfile(const char *,FILE *);
+
+int extract_paths(const char *,char **,char **,char **);
+
+
+
+int contains_str(const char *,const char *);
+
+
+
+int contains_str(const char *str,const char *sub){
+	int len=strlen(sub);
+	for(int n=strlen(str)-len+1;n-->0;){
+		//printf("n:%d str:%s\n",n,str+n);
+		int trip=1;
+		for(int m=0;m<len;++m){
+			if(str[n+m]!=sub[m]){trip=0;break;}
+		}
+		if(trip)
+		return 1;
+	}
+	return 0;
+}
+
+
+
+
+
+int dump(const char *);
+
+int dump(const char *target){
+
+	char *path,*name,*tagfile;
+	if(!extract_paths(target,&path,&name,&tagfile)){
+		return 0;
+	}
+
+	FILE *ftags;
+	if((ftags=fopen(tagfile,"rb"))==NULL){
+		return 0;
+	}
+
+
+	
+	struct info i={0};
+	fread(&i,sizeof(struct info),1,ftags);
+	if(i.header!=TAGFILE_MAGIC){return 0;}
+
+	printf("target file: %s\n",target);
+	printf("tagfile: %s\n",tagfile);
+	printf("magic: %x\n",i.header);
+	printf("version: %d.%d%s%d\n",i.vera,i.verb,(i.verc?"rc":"b"),i.verd);
+	printf("\n");
+
+	struct table tdata={0};
+	fread(&tdata,sizeof(struct table),1,ftags);
+	printf("rows virtual: %d\n",tdata.virt);
+	printf("rows real: %d\n",tdata.real);
+	printf("\n");	
+
+	struct row rowdata={0};
+
+	for(int i=0;i<tdata.virt;++i){//for every table entry
+		read_row(&rowdata,ftags);//read one row
+		if(rowdata.name[0]=='\0')continue;//ignore empty rows
+		printf("%s\n",rowdata.name);
+		for(int n=0;n<TAG_COUNT;++n){
+			if(rowdata.tags[n][0]=='\0')continue;
+			printf("  %s\n",rowdata.tags[n]);
+		}
+
+	}
+
+
+	return 1;
+}
+
+
+
+
+
+
 
 
 
@@ -54,46 +135,62 @@ int read_row(struct row *entry,FILE *ftags){
 }
 
 
+int search_tagfile(const char *path,char **tags,int tagc,FILE *ftags){
 
-int search_tagfile(const char *path,FILE *ftags,char **tags,int tagc){
-
-	struct info i;
-	char name[NAME_BUFFER_SIZE+1],tag[TAG_BUFFER_SIZE+1];
-	
-
+	struct info i={0};
 	fread(&i,sizeof(struct info),1,ftags);
-	//printf("Header: [%x]\n",tf->t_info.header);
 	if(i.header!=TAGFILE_MAGIC){return 0;}
 
-	int ventries=0,rentries=0;
-	fread(&ventries,sizeof(int),1,ftags);
-	fread(&rentries,sizeof(int),1,ftags);
+	struct table tdata={0};
+	fread(&tdata,sizeof(struct table),1,ftags);
+	
+	struct row rowdata={0};
 
-	for(int n=0;n<ventries;++n){
-		int offset=ftell(ftags);
-		fread(name,sizeof(char),NAME_BUFFER_SIZE,ftags);
-		for(int m=0;m<TAG_COUNT;++m){
-			fread(tag,sizeof(char),TAG_BUFFER_SIZE,ftags);
-			int trip=0;
-			for(int l=0;l<tagc;++l){
-				if(!strcmp(tag,tags[l])){//found a match!
-					if(strcmp(name,".")){
-						printf("%s%s\n",path,name);
-					}else{
-						printf("%s\n",path);//ignore entries with the name of "."
+	for(int i=0;i<tdata.virt;++i){//for every table entry
+		read_row(&rowdata,ftags);//read one row
+		if(rowdata.name[0]=='\0')continue;//ignore empty rows
+		
+		int valid=0,trip=0;
+		for(int n=0;n<tagc;++n){//for every tag rule
+			
+			if(tags[n][0]=='-'){
+				for(int m=0;m<TAG_COUNT;++m){
+					if(!strcmp(rowdata.tags[m],tags[n]+1)){//as soon as we find an ilegal tag, stop checking rules
+						valid=0;trip=1;break;
 					}
-					trip=1;
-					break;
 				}
+				
+			}else if(tags[n][0]=='%'){
+				for(int m=0;m<TAG_COUNT;++m){
+					if(contains_str(rowdata.tags[m],tags[n]+1)){//found a match via a partial tag
+						valid=1;break;
+					}
+				}
+				
+			}else{
+				int mod=tags[n][0]=='+';
+				for(int m=0;m<TAG_COUNT;++m){
+					if(!strcmp(rowdata.tags[m],tags[n]+mod)){//found a match via an exact tag
+						valid=1;break;
+					}
+				}
+				
 			}
-			if(trip){
-				fseek(ftags,offset+ROW_BUFFER_SIZE,SEEK_SET);
-				break;
+		
+			if(trip)break;//stop looping if an illegal tag was found
+		
+		
+		}
+		
+		if(valid){//if this row matches the rules
+			if(strcmp(rowdata.name,".")){
+				printf("%s%s\n",path,rowdata.name);
+			}else{
+				printf("%s\n",path);//ignore entries with the name of "."
 			}
 		}
 
 	}
-
 
 return 1;
 }
@@ -104,28 +201,25 @@ return 1;
 
 int query_tagfile(const char *name,FILE *ftags){
 
-	struct info i;
-
+	struct info i={0};
 	fread(&i,sizeof(struct info),1,ftags);
-	//printf("Header: [%x]\n",tf->t_info.header);
 	if(i.header!=TAGFILE_MAGIC){return 0;}
 
-	int ventries=0,rentries=0;
-	fread(&ventries,sizeof(int),1,ftags);
-	fread(&rentries,sizeof(int),1,ftags);
+	struct table tdata={0};
+	fread(&tdata,sizeof(struct table),1,ftags);
 	
-	struct row entry;
+	struct row rowdata={0};
 	
-
-	for(int n=0;n<ventries;++n){
-		read_row(&entry,ftags);
-		if(!strcmp(entry.name,name)){//if the names match
-			for(int c=0;c<TAG_COUNT;++c){
-				if(entry.tags[c][0]!='\0'){
-					printf("%s\n",entry.tags[c]);
+	for(int i=0;i<tdata.virt;++i){
+	
+		read_row(&rowdata,ftags);
+		if(!strcmp(rowdata.name,name)){//if the names match
+			for(int n=0;n<TAG_COUNT;++n){
+				if(rowdata.tags[n][0]!='\0'){
+					printf("%s\n",rowdata.tags[n]);
 				}
 			}
-			break;
+			break;//prin the first result only
 		}
 	}
 

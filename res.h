@@ -1,13 +1,13 @@
-#ifndef _RES_H_
-#define _RES_H_
+#ifndef RES_H
+#define RES_H
 
 #include <stdlib.h>
 #include <string.h>
 
-#define VERSION_MAJOR			0
-#define VERSION_MINOR			9
+#define VERSION_MAJOR			1
+#define VERSION_MINOR			0
 #define VERSION_BUILD     0
-#define VERSION_REVISION  0
+#define VERSION_REVISION  19
 
 char *helptext="\
 Usage: %s [OPTION] [TAGS]... FILE\n\
