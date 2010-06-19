@@ -76,9 +76,12 @@ int dump(const char *target){
 	if(!extract_paths(target,&path,&name,&tagfile)){
 		return 0;
 	}
+	free(path);path=NULL;
 
 	FILE *ftags;
 	if((ftags=fopen(tagfile,"rb"))==NULL){
+		free(name);name=NULL;
+		free(tagfile);tagfile=NULL;
 		return 0;
 	}
 
@@ -86,7 +89,12 @@ int dump(const char *target){
 	
 	struct info i={0};
 	fread(&i,sizeof(struct info),1,ftags);
-	if(i.header!=TAGFILE_MAGIC){return 0;}
+	if(i.header!=TAGFILE_MAGIC){
+		fclose(ftags);
+		free(name);name=NULL;
+		free(tagfile);tagfile=NULL;
+		return 0;
+	}
 
 	printf("target file: %s\n",target);
 	printf("tagfile: %s\n",tagfile);
@@ -112,7 +120,10 @@ int dump(const char *target){
 		}
 
 	}
-
+	
+	fclose(ftags);
+	free(name);name=NULL;
+	free(tagfile);tagfile=NULL;
 
 	return 1;
 }

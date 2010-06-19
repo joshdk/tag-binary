@@ -315,96 +315,86 @@ int tag_file(const char *target,char **tags,int tagc){
 		return 0;
 	}
 
-	//printf("!here 1\n");
 
 	char *path,*name,*tagfile;
 	if(!extract_paths(target,&path,&name,&tagfile)){
 		return 0;
 	}
-	//printf("!here 2\n");
 
 	FILE *ftags;
 	struct info i;
-	//struct table t;
-	int /*ventries=0,rentries=0,*/existing=0,offset=INVALID_OFFSET,entries_offset=-1;
+	int existing=0,offset=INVALID_OFFSET,entries_offset=-1;
 	struct table tdata={0};
 
 	struct row rowdata={0};
 	
 	if((ftags=fopen(tagfile,"rb+"))!=NULL){//open an old file
-		//printf("opening old file\n");
 		fread(&i,sizeof(struct info),1,ftags);
-		//printf("magic number: [%x]\n",i.header);
+		if(i.header!=TAGFILE_MAGIC){
+			free(path);path=NULL;
+			free(name);name=NULL;
+			free(tagfile);tagfile=NULL;
+			return 0;
+		}
+
 		entries_offset=ftell(ftags);
 		fread(&tdata,sizeof(struct table),1,ftags);
-		//fread(&ventries,sizeof(int),1,ftags);
-		//fread(&rentries,sizeof(int),1,ftags);
-		//char filename[NAME_BUFFER_SIZE];
+
 		for(int n=0;n<tdata.virt;++n){
 			int pos=ftell(ftags);
-			//memset(filename,'\0',NAME_BUFFER_SIZE);
-			//fread(filename,sizeof(char),NAME_BUFFER_SIZE,ftags);
 			read_row(&rowdata,ftags);
-			//printf("current row name: %s\n",filename);
 			if(rowdata.name[0]=='\0' && offset==INVALID_OFFSET){//found the first blank row
 				offset=pos;
-				//printf("found an empty row at offset: %d\n",offset);
 			}else if(!strcmp(name,rowdata.name)){//found the target row
 				offset=pos;
 				existing=1;
 				break;
-				//printf("found the target's row at offset: %d\n",offset);
 			}
-			//didn't find a matching, or empty row
-			//fseek(ftags,TAG_COUNT*TAG_BUFFER_SIZE,SEEK_CUR);
 			
 		}
 		if(offset==INVALID_OFFSET){
-			//printf("appending new row\n");
-			offset=append_row(ftags);
+			offset=append_row(ftags);//append a new row
 			++tdata.virt;
 		}
 		
 
 
 	}else if((ftags=fopen(tagfile,"wb+"))!=NULL){//create a new file
-		//printf("creating new file\n");
-		//struct info i;
 		i.header=TAGFILE_MAGIC;
 		i.vera=VERSION_MAJOR,i.verb=VERSION_MINOR,i.verc=VERSION_BUILD,i.verd=VERSION_REVISION;
 		fwrite(&i,sizeof(struct info),1,ftags);
-		
-		//int entries_offset=ftell(ftags);
 
 		entries_offset=ftell(ftags);
 		fwrite(&tdata,sizeof(struct table),1,ftags);
-		//fwrite(&ventries,sizeof(int),1,ftags);
-		//fwrite(&rentries,sizeof(int),1,ftags);
 		offset=append_row(ftags);
 		++tdata.virt;
-		//printf("row offset: [%d]\n",offset);
 
 	}else{
+		free(path);path=NULL;
+		free(name);name=NULL;
+		free(tagfile);tagfile=NULL;
 		fprintf(stderr,"tag: `%s\': Could not tag\n",target);
 		return 0;
 	}
 	
-
-	//printf("row offset: [%d]\n",offset);
 	if(tag_row(name,tags,tagc,ftags,offset)){//if data was added
 		if(!existing){++tdata.real;}
 	}else{//if no data was added (or removed)
 		if(existing){--tdata.real;}
 	}
 
-		//update size of virual and real entries
-		fseek(ftags,entries_offset,SEEK_SET);
-		fwrite(&tdata,sizeof(struct table),1,ftags);
-		//fwrite(&ventries,sizeof(int),1,ftags);
-		//fwrite(&rentries,sizeof(int),1,ftags);
+	//update size of virual and real entries
+	fseek(ftags,entries_offset,SEEK_SET);
+	fwrite(&tdata,sizeof(struct table),1,ftags);
 
+
+	
 	fclose(ftags);
+	free(path);path=NULL;
+	free(name);name=NULL;
+	free(tagfile);tagfile=NULL;
 
+	return 1;
 }
 
 
