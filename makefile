@@ -2,7 +2,7 @@ CC 	 	    = gcc
 CFLAGS    = -std=c99
 TARGET    = tag
 SOURCE    = tag.c tfmanip.h res.h
-INSTALL   = ~/Code/bin/
+INSTALL   = /usr/bin/
 
 all: build
 
@@ -16,9 +16,5 @@ clean:
 rebuild: clean build
 
 install:
-	-mkdir -p $(INSTALL)
 	cp -f $(TARGET) $(INSTALL)
-
-archive:
-	zip -r $(TARGET).zip $(SOURCE) readme.*
 
