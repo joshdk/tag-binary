@@ -164,22 +164,29 @@ int search_tagfile(const char *path,char **tags,int tagc,FILE *ftags){
 		int valid=0,trip=0;
 		for(int n=0;n<tagc;++n){//for every tag rule
 			
-			if(tags[n][0]=='-'){
+			if(tags[n][0]=='-'){//exact, contain absolutely none
 				for(int m=0;m<TAG_COUNT;++m){
 					if(!strcmp(rowdata.tags[m],tags[n]+1)){//as soon as we find an ilegal tag, stop checking rules
 						valid=0;trip=1;break;
 					}
 				}
 				
-			}else if(tags[n][0]=='%'){
+			}else if(tags[n][0]=='%'){//partial, contains at least one
 				for(int m=0;m<TAG_COUNT;++m){
 					if(contains_str(rowdata.tags[m],tags[n]+1)){//found a match via a partial tag
 						valid=1;break;
 					}
 				}
 				
+			}else if(tags[n][0]==':'){//partial, contains absolutely none
+				for(int m=0;m<TAG_COUNT;++m){
+					if(contains_str(rowdata.tags[m],tags[n]+1)){//found a match via a partial tag
+						valid=0;trip=1;break;
+					}
+				}
+
 			}else{
-				int mod=tags[n][0]=='+';
+				int mod=tags[n][0]=='+';//exact, contains at least one
 				for(int m=0;m<TAG_COUNT;++m){
 					if(!strcmp(rowdata.tags[m],tags[n]+mod)){//found a match via an exact tag
 						valid=1;break;

@@ -149,7 +149,7 @@ int main(int argc,char **argv) {
 	if(!strcmp(argv[1],"-t") || !strcmp(argv[1],"--tag")){//tag a file
 		int tagc=0;
 		char **tags;
-		if(tags=get_tags(argv,argc,"-+%",&tagc)){
+		if(tags=get_tags(argv,argc,"-+%:",&tagc)){
 			tag_file(argv[argc-1],tags,tagc);
 			free(tags);tags=NULL;
 		}else{
@@ -173,7 +173,7 @@ int main(int argc,char **argv) {
 
 		int tagc=0;
 		char **tags;
-		if(tags=get_tags(argv,argc,"+-%",&tagc)){
+		if(tags=get_tags(argv,argc,"+-%:",&tagc)){
 
 			int len=strlen(argv[argc-1]);
 			char *path=malloc((len+4)*sizeof(*path));
