@@ -22,13 +22,13 @@ Tagging a file or directory:
 tag can take 4 different modifiers for a tag:
 
 `+[tag]` or `[tag]`   adds tag `[tag]` to the target
-
+    
 `-[tag]`            removes tag `[tag]` from the target
-
+    
 `%[tag]`            removes all tags where `[tag]` is a substring 
-
+    
 `:[tag]`            removes all tags where `[tag]` is not a substring
-
+    
 *Here are the individual items that are buildable from the Makefile:*
 
     make init
