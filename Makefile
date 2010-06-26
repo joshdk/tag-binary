@@ -21,6 +21,6 @@ clean:
 
 rebuild: clean build
 
-install:
+install: build
 	cp -f ${TARGET} ${INSTALL_DIR}
 

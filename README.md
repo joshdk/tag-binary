@@ -1,11 +1,6 @@
 tag- Simple file tagging and searching
 ================================
 
-What you need to build your own jQuery
----------------------------------------
-* Make sure that you have Java installed (if you want to build a minified version of jQuery).  
-If not, [go to this page](http://java.sun.com/javase/downloads/index.jsp) and download "Java Runtime Environment (JRE) 5.0"
-
 Build Options
 --------------
 
@@ -20,12 +15,16 @@ Build Options
 How to use tag
 -----------------------------
 
-*Note: If you are using either `rake` or `ant`, substitute your chosen method in place of `make` in the examples below. They work identically for all intents and purposes. Quick reference is also available for `rake` by typing `rake -T` in the `jquery` directory.*
+Tagging a file or directory:
 
-In the main directory of the distribution (the one that this file is in), type
-the following to make all versions of jQuery:
+    tag -t [tags] /path/to/target
 
-    make
+tag can take 4 different modifiers for a tag:
+
+    +[tag] or [tag]   adds tag [tag] to the target
+    -[tag]            removes tag [tag] from the target
+    %[tag]            removes all tags where [tag] is a substring 
+    :[tag]            removes all tags where [tag] is not a substring
 
 *Here are the individual items that are buildable from the Makefile:*
 
