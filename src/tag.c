@@ -129,12 +129,12 @@ int main(int argc,char **argv) {
 	}
 	
 	
-	if(contains("-h",argv,argc) || contains("--help",argv,argc)){
+	if(!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")){
 		printf(helptext,PROGRAM_NAME);
 		return 0;
 	}
 	
-	if(contains("-v",argv,argc) || contains("--version",argv,argc)){
+	if(!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")){
 		printf(versiontext,VERSION_MAJOR,VERSION_MINOR,(VERSION_BUILD?"rc":"b"),VERSION_REVISION);
 		return 0;
 	}
@@ -149,11 +149,11 @@ int main(int argc,char **argv) {
 	if(!strcmp(argv[1],"-t") || !strcmp(argv[1],"--tag")){//tag a file
 		int tagc=0;
 		char **tags;
-		if(tags=get_tags(argv,argc,"-+%:",&tagc)){
+		if(tags=get_tags(argv,argc,"+-:.",&tagc)){
 			tag_file(argv[argc-1],tags,tagc);
 			free(tags);tags=NULL;
 		}else{
-			fprintf(stderr,"tag: too many invalid tag(s)\n",argv[argc-1]);
+			fprintf(stderr,"tag: too many invalid tag(s)\n");
 		}
 
 	}else if(!strcmp(argv[1],"-f") || !strcmp(argv[1],"--find")){//find file(s)
@@ -173,7 +173,7 @@ int main(int argc,char **argv) {
 
 		int tagc=0;
 		char **tags;
-		if(tags=get_tags(argv,argc,"+-%:",&tagc)){
+		if(tags=get_tags(argv,argc,"+-:.",&tagc)){
 
 			int len=strlen(argv[argc-1]);
 			char *path=malloc((len+4)*sizeof(*path));
@@ -248,7 +248,7 @@ int tag_row(const char *filename,char **tags,int tagc,FILE *ftags,int offset){
 				}
 			}		
 
-		}else if(tags[n][0]=='%'){//remove a tag from the list via partial match
+		}else if(tags[n][0]==':'){//remove a tag from the list via partial match
 			for(int m=0;m<TAG_COUNT;++m){
 				if(!rowdata.tags[m][0])continue;
 				if(contains_str(rowdata.tags[m],tags[n]+1)){//if this tag matches
@@ -257,7 +257,7 @@ int tag_row(const char *filename,char **tags,int tagc,FILE *ftags,int offset){
 				}
 			}
 
-		}else if(tags[n][0]==':'){//remove a tag from the list via partial match
+		}else if(tags[n][0]=='.'){//remove a tag from the list via partial match
 			for(int m=0;m<TAG_COUNT;++m){
 				if(!rowdata.tags[m][0])continue;
 				if(!contains_str(rowdata.tags[m],tags[n]+1)){//if this tag matches

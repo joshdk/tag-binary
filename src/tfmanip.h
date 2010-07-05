@@ -171,14 +171,14 @@ int search_tagfile(const char *path,char **tags,int tagc,FILE *ftags){
 					}
 				}
 				
-			}else if(tags[n][0]=='%'){//partial, contains at least one
+			}else if(tags[n][0]==':'){//partial, contains at least one
 				for(int m=0;m<TAG_COUNT;++m){
 					if(contains_str(rowdata.tags[m],tags[n]+1)){//found a match via a partial tag
 						valid=1;break;
 					}
 				}
 				
-			}else if(tags[n][0]==':'){//partial, contains absolutely none
+			}else if(tags[n][0]=='.'){//partial, contains absolutely none
 				for(int m=0;m<TAG_COUNT;++m){
 					if(contains_str(rowdata.tags[m],tags[n]+1)){//found a match via a partial tag
 						valid=0;trip=1;break;

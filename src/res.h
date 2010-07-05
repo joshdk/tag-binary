@@ -10,7 +10,7 @@
 #define VERSION_REVISION  10
 
 char *helptext="\
-Usage: %s [OPTION] [+|-|%|:][TAGS]... FILE\n\
+Usage: %s [OPTION] [+|-|:|.][TAGS]... FILE\n\
 Tag or search for files by keywords\n\
 \n\
   -d, --dump      dump tagfile data associated with FILE\n\
