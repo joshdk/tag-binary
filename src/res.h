@@ -7,7 +7,7 @@
 #define VERSION_MAJOR			1
 #define VERSION_MINOR			2
 #define VERSION_BUILD     1
-#define VERSION_REVISION  10
+//#define VERSION_REVISION  10
 
 char *helptext="\
 Usage: %s [OPTION] [+|-|:|.][TAGS]... FILE\n\
@@ -21,7 +21,7 @@ Tag or search for files by keywords\n\
   -v, --version   display version info\n";
 
 char *versiontext="\
-tag %d.%d%s%d\n\
+tag %d.%d.%d\n\
 Copyright (C) 2010, Joshua Komoroske\n\
 License BSD: New BSD License.\n\
 \n\

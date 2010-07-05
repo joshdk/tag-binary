@@ -26,7 +26,8 @@
 
 struct info{
 	int header;
-	unsigned char vera,verb,verc,verd;
+	unsigned char vera,verb;
+	unsigned short verc;//,verd;
 };
 
 struct table{
@@ -99,7 +100,7 @@ int dump(const char *target){
 	printf("target file: %s\n",target);
 	printf("tagfile: %s\n",tagfile);
 	printf("magic: %x\n",i.header);
-	printf("version: %d.%d%s%d\n",i.vera,i.verb,(i.verc?"rc":"b"),i.verd);
+	printf("version: %d.%d.%d\n",i.vera,i.verb,i.verc);//?"rc":"b"),i.verd);
 	printf("\n");
 
 	struct table tdata={0};

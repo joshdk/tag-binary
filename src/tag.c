@@ -134,7 +134,7 @@ int main(int argc,char **argv) {
 	}
 	
 	if(!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")){
-		printf(versiontext,VERSION_MAJOR,VERSION_MINOR,(VERSION_BUILD?"rc":"b"),VERSION_REVISION);
+		printf(versiontext,VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD);
 		return 0;
 	}
 
@@ -369,7 +369,7 @@ int tag_file(const char *target,char **tags,int tagc){
 
 	}else if((ftags=fopen(tagfile,"wb+"))!=NULL){//create a new file
 		i.header=TAGFILE_MAGIC;
-		i.vera=VERSION_MAJOR,i.verb=VERSION_MINOR,i.verc=VERSION_BUILD,i.verd=VERSION_REVISION;
+		i.vera=VERSION_MAJOR,i.verb=VERSION_MINOR,i.verc=VERSION_BUILD;//,i.verd=VERSION_REVISION;
 		fwrite(&i,sizeof(struct info),1,ftags);
 
 		entries_offset=ftell(ftags);
