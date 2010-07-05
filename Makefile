@@ -21,7 +21,7 @@ $(TARGET): $(SOURCE)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCE)
 
 clean:
-	-rm -f $(BUILD_DIR)/*
+	-rm -f $(TARGET)
 	-rm -f .tags
 
 rebuild: clean build
