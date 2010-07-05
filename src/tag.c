@@ -12,7 +12,6 @@
 
 
 
-
 int lstat(const char *path, struct stat *buf);
 int isalnum(int);
 int isprint (int);

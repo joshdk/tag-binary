@@ -1,26 +1,30 @@
-SRC_DIR   = src
-
-TARGET    = tag
-
-SOURCE    = ${SRC_DIR}/tag.c\
-						${SRC_DIR}/tfmanip.h\
-						${SRC_DIR}/res.h
-
-INSTALL_DIR = /usr/bin/
-
 CC 	 	    = gcc
 CFLAGS    = -std=c99
 
+SRC_DIR   = src
+BUILD_DIR = build
+
+TARGET    = $(BUILD_DIR)/tag
+
+SOURCE    = $(SRC_DIR)/tag.c\
+						$(SRC_DIR)/tfmanip.h\
+						$(SRC_DIR)/res.h
+
+INSTALL_DIR = /usr/bin/
+
+
 all: build
 
-build:
-	${CC} ${CFLAGS} -o ${TARGET} ${SOURCE}
+build: $(TARGET)
+
+$(TARGET): $(SOURCE)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCE)
 
 clean:
-	-rm -f ${TARGET} *.o .tags
+	-rm -f $(BUILD_DIR)/*
 
 rebuild: clean build
 
 install: build
-	cp -f ${TARGET} ${INSTALL_DIR}
+	cp -f $(TARGET) $(INSTALL_DIR)
 
