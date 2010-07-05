@@ -22,9 +22,11 @@ $(TARGET): $(SOURCE)
 
 clean:
 	-rm -f $(BUILD_DIR)/*
+	-rm -f .tags
 
 rebuild: clean build
 
 install: build
 	cp -f $(TARGET) $(INSTALL_DIR)
+
 
