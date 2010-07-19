@@ -6,11 +6,11 @@
 
 #define VERSION_MAJOR			1
 #define VERSION_MINOR			2
-#define VERSION_BUILD     1
+#define VERSION_BUILD     18
 //#define VERSION_REVISION  10
 
 char *helptext="\
-Usage: %s [OPTION] [+|-|:|.][TAGS]... FILE\n\
+Usage: tag [OPTION] [+|-|:|.][TAGS]... FILE\n\
 Tag or search for files by keywords\n\
 \n\
   -d, --dump      dump tagfile data associated with FILE\n\

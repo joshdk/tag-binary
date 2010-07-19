@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PROGRAM_NAME			"tag"
+//#define PROGRAM_NAME			"tag"
 
 #define TAGFILE_FILENAME  ".tags"
 #define TAGFILE_MAGIC			0x73676174 //"tags"
@@ -21,13 +21,21 @@
 #define INVALID_OFFSET 		-1
 #define INVALID_SIZE			-1
 
+#define DEFRAG_RATIO      0.875
+
 #define TRUE 							1
 #define FALSE							0
 
+struct offsets{
+	int info;
+	int table;
+	int data;
+};
+
 struct info{
 	int header;
-	unsigned char vera,verb;
-	unsigned short verc;//,verd;
+	unsigned char major,minor;
+	unsigned short build;//,verd;
 };
 
 struct table{
@@ -45,7 +53,7 @@ int query_tagfile(const char *,FILE *);
 
 int extract_paths(const char *,char **,char **,char **);
 
-
+int defrag_tagfile(FILE *);
 
 int contains_str(const char *,const char *);
 
@@ -64,6 +72,18 @@ int contains_str(const char *str,const char *sub){
 	}
 	return 0;
 }
+
+
+
+int defrag_tagfile(FILE *ftags){
+	printf("[begin defrag]\n");
+	return 1;
+}
+
+
+
+
+
 
 
 
@@ -100,7 +120,7 @@ int dump(const char *target){
 	printf("target file: %s\n",target);
 	printf("tagfile: %s\n",tagfile);
 	printf("magic: %x\n",i.header);
-	printf("version: %d.%d.%d\n",i.vera,i.verb,i.verc);//?"rc":"b"),i.verd);
+	printf("version: %d.%d.%d\n",i.major,i.minor,i.build);//?"rc":"b"),i.verd);
 	printf("\n");
 
 	struct table tdata={0};
@@ -109,7 +129,7 @@ int dump(const char *target){
 	printf("rows real: %d\n",tdata.real);
 	printf("\n");	
 
-	struct row rowdata={0};
+	struct row rowdata={{0}};
 
 	for(int i=0;i<tdata.virt;++i){//for every table entry
 		read_row(&rowdata,ftags);//read one row
@@ -156,7 +176,7 @@ int search_tagfile(const char *path,char **tags,int tagc,FILE *ftags){
 	struct table tdata={0};
 	fread(&tdata,sizeof(struct table),1,ftags);
 	
-	struct row rowdata={0};
+	struct row rowdata={{0}};
 
 	for(int i=0;i<tdata.virt;++i){//for every table entry
 		read_row(&rowdata,ftags);//read one row
@@ -227,7 +247,7 @@ int query_tagfile(const char *name,FILE *ftags){
 	struct table tdata={0};
 	fread(&tdata,sizeof(struct table),1,ftags);
 	
-	struct row rowdata={0};
+	struct row rowdata={{0}};
 	
 	for(int i=0;i<tdata.virt;++i){
 	

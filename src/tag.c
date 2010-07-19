@@ -14,21 +14,18 @@
 
 int lstat(const char *path, struct stat *buf);
 int isalnum(int);
-int isprint (int);
+int isprint(int);
 
 void search(const char *,char **,int);
 
 
-//void printf_r(const char*,int,char**);
 //int valid_tag(const char*);
 
 int valid_tag(const char *,const char *);
-int contains(const char*,char**,int);
-int subset(char**,char**,int,int,int);
 char **get_tags(char **,int,const char *,int *);
 
 
-int contains_char(const char *,char);
+
 int query_file(const char*);
 int tag_file(const char*,char**,int);
 int append_row(FILE*);
@@ -49,14 +46,17 @@ char **get_tags(char **argv,int argc,const char *mods,int *count){
 }
 
 
-//*
+/*
+void printf_r(const char*,int,char**);
 void printf_r(const char *format,char **arrv,int arrc){
 	for(int n=0;n<arrc;++n)
 		printf(format,arrv[n]);
 }
 //*/
-//*
-int contains(const char *str,char **arr,int size){
+
+/*
+int contains(const char*,char**,int);
+int contains(const char *str,char **arr,int size){//check if a char** conains a char*
 	for(int n=size;n--;)
 		if(!strcmp(str,arr[n]))
 			return 1;
@@ -64,15 +64,18 @@ int contains(const char *str,char **arr,int size){
 }
 //*/
 
+/*
+int subset(char**,char**,int,int,int);
 int subset(char **sub,char **set,int size,int to,int from){
 	int o=0;
 	for(int n=to;n<=from&&n<size;++n)
 		sub[o++]=set[n];
 	return o;
 }
-
+//*/
 
 /*
+int valid_tag(const char *);
 int valid_tag(const char *tag){
 	for(int n=strlen(tag);--n;)
 		if(!isalnum(tag[n]))return 0;
@@ -80,12 +83,14 @@ int valid_tag(const char *tag){
 }
 //*/
 
+/*
+int contains_char(const char *,char);
 int contains_char(const char *str,char l){
 	for(int n=strlen(str);n--;)
 		if(str[n]==l)return 1;
 	return 0;
 }
-
+//*/
 
 
 
@@ -95,14 +100,10 @@ int valid_tag(const char *tag,const char *mods){
 	int len=strlen(tag);
 	if(len>17)
 		return 0;
-	if(len==17 && !contains_char(mods,tag[0]))
+	if(len==17 && strchr(mods,tag[0])!=NULL)//can be 17 chars long if prefixed by a modifier
 		return 0;
-	/*
-	if(!contains_char(mods,tag[0]) && !isalnum(tag[0]))
-		return 0;	
-	//*/
 	for(int n=len;--n;)
-		if(!isprint(tag[n]))
+		if(!isprint(tag[n]))//because we don't take kindly to tabs and newlines
 			return 0;
 
 	return 1;
@@ -115,10 +116,7 @@ int valid_tag(const char *tag,const char *mods){
 
 
 
-int main(int argc,char **argv) {
-
-//printf("result: %d\n",contains_str("hello",""));
-//return 0;
+int main(int argc,char **argv){
 
 //*
 	if(argc<2){
@@ -129,7 +127,7 @@ int main(int argc,char **argv) {
 	
 	
 	if(!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")){
-		printf(helptext,PROGRAM_NAME);
+		printf(helptext);
 		return 0;
 	}
 	
@@ -148,7 +146,7 @@ int main(int argc,char **argv) {
 	if(!strcmp(argv[1],"-t") || !strcmp(argv[1],"--tag")){//tag a file
 		int tagc=0;
 		char **tags;
-		if(tags=get_tags(argv,argc,"+-:.",&tagc)){
+		if((tags=get_tags(argv,argc,"+-:.",&tagc))){
 			tag_file(argv[argc-1],tags,tagc);
 			free(tags);tags=NULL;
 		}else{
@@ -167,12 +165,10 @@ int main(int argc,char **argv) {
 			fprintf(stderr,"tag: `%s\': Not a directory\n",argv[argc-1]);
 			return 0;
 		}
-		//char **tags=(char**)malloc(sizeof(char*)*(argc-3));
-		//subset(tags,argv,argc,2,argc-2);
 
 		int tagc=0;
 		char **tags;
-		if(tags=get_tags(argv,argc,"+-:.",&tagc)){
+		if((tags=get_tags(argv,argc,"+-:.",&tagc))){
 
 			int len=strlen(argv[argc-1]);
 			char *path=malloc((len+4)*sizeof(*path));
@@ -186,7 +182,7 @@ int main(int argc,char **argv) {
 
 
 		}else{
-			fprintf(stderr,"tag: too many invalid tag(s)\n",argv[argc-1]);
+			fprintf(stderr,"tag: too many invalid tag(s)\n");
 		}
 
 
@@ -231,12 +227,29 @@ int append_row(FILE *ftags){
 int tag_row(const char *filename,char **tags,int tagc,FILE *ftags,int offset){
 	
 	fseek(ftags,offset,SEEK_SET);
-	struct row rowdata={0};
+	struct row rowdata={{0}};
 	read_row(&rowdata,ftags);
 	fseek(ftags,offset,SEEK_SET);
 
 	for(int n=0;n<tagc;++n){//loop over tags
-
+		/*
+		switch(tags[n][0]){
+			case '-':
+				
+				break;
+			case ':':
+			
+				break;
+			case '.':
+			
+				break;
+			case '+'://fall-thrugh on this one
+			default:
+		
+		}
+		//*/
+		
+		//*
 		if(tags[n][0]=='-'){//remove a tag from the list via exact match
 			for(int m=0;m<TAG_COUNT;++m){
 				if(!rowdata.tags[m][0])continue;
@@ -283,6 +296,7 @@ int tag_row(const char *filename,char **tags,int tagc,FILE *ftags,int offset){
 			}
 
 		}
+		//*/
 
 	}
 
@@ -293,18 +307,17 @@ int tag_row(const char *filename,char **tags,int tagc,FILE *ftags,int offset){
 			break;
 		}
 	}
-	//printf("count: [%d]\n",count);
 
-	if(count>0){
+	if(count==0){//if this entry doesn't have any tags, then remove it altogether
+		char buf[ROW_BUFFER_SIZE];
+		memset(buf,'\0',ROW_BUFFER_SIZE);
+		fwrite(buf,sizeof(char),ROW_BUFFER_SIZE,ftags);
+	}else{
 		strcpy(rowdata.name,filename);
 		fwrite(rowdata.name,sizeof(char),NAME_BUFFER_SIZE,ftags);
 		for(int n=0;n<TAG_COUNT;++n){
 			fwrite(rowdata.tags[n],sizeof(char),TAG_BUFFER_SIZE,ftags);
 		}
-	}else{
-		char buf[ROW_BUFFER_SIZE];
-		memset(buf,'\0',ROW_BUFFER_SIZE);
-		fwrite(buf,sizeof(char),ROW_BUFFER_SIZE,ftags);
 	}
 		
 return count>0;
@@ -330,11 +343,11 @@ int tag_file(const char *target,char **tags,int tagc){
 	}
 
 	FILE *ftags;
-	struct info i;
+	struct info i={TAGFILE_MAGIC,VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD};
 	int existing=0,offset=INVALID_OFFSET,entries_offset=-1;
 	struct table tdata={0};
 
-	struct row rowdata={0};
+	struct row rowdata={{0}};
 	
 	if((ftags=fopen(tagfile,"rb+"))!=NULL){//open an old file
 		fread(&i,sizeof(struct info),1,ftags);
@@ -368,8 +381,9 @@ int tag_file(const char *target,char **tags,int tagc){
 
 
 	}else if((ftags=fopen(tagfile,"wb+"))!=NULL){//create a new file
-		i.header=TAGFILE_MAGIC;
-		i.vera=VERSION_MAJOR,i.verb=VERSION_MINOR,i.verc=VERSION_BUILD;//,i.verd=VERSION_REVISION;
+		//i.header=TAGFILE_MAGIC;
+		//i.major=VERSION_MAJOR,i.minor=VERSION_MINOR,i.build=VERSION_BUILD;//,i.verd=VERSION_REVISION;
+		//we already consructed i
 		fwrite(&i,sizeof(struct info),1,ftags);
 
 		entries_offset=ftell(ftags);
@@ -395,7 +409,9 @@ int tag_file(const char *target,char **tags,int tagc){
 	fseek(ftags,entries_offset,SEEK_SET);
 	fwrite(&tdata,sizeof(struct table),1,ftags);
 
-
+	if(((double)tdata.real)/((double)tdata.virt) <= DEFRAG_RATIO){//too many empty rows in the file, time to defrag it
+		defrag_tagfile(ftags);
+	}
 	
 	fclose(ftags);
 	free(path);path=NULL;
