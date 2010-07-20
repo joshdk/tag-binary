@@ -16,11 +16,11 @@ INSTALL_DIR = /usr/bin/
 all: build
 
 build: $(TARGET)
-	-mv $(BUILD_DIR)/$(TARGET) ./
 
 $(TARGET): $(SOURCE)
-	-mkdir $(BUILD_DIR)
+	-mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/$(TARGET) $(SOURCE)
+	-mv -fu $(BUILD_DIR)/$(TARGET) ./
 
 clean:
 	-rm -rf $(BUILD_DIR)
