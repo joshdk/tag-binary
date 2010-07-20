@@ -3,5 +3,5 @@ build/*
 
 tag
 .tags
-
+.gitignore
 
