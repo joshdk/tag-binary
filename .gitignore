@@ -1,4 +1,7 @@
-tag
+build/
+build/*
 
+tag
 .tags
+
 

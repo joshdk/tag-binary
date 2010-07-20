@@ -19,11 +19,12 @@ build: $(TARGET)
 	-mv $(BUILD_DIR)/$(TARGET) ./
 
 $(TARGET): $(SOURCE)
+	-mkdir $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/$(TARGET) $(SOURCE)
 
 clean:
-	-rm -f $(TARGET) $(BUILD_DIR)/*
-	-rm -f .tags
+	-rm -rf $(BUILD_DIR)
+	-rm -f $(TARGET) .tags
 
 rebuild: clean build
 
