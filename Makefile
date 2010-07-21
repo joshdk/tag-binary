@@ -20,7 +20,7 @@ build: $(TARGET)
 
 $(TARGET): $(SOURCE)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/$(TARGET) $(SOURCE)
-	./$(BUILD_DIR)/reversion.sh
+	./$(BUILD_DIR)/reversion
 	-mv -fu $(BUILD_DIR)/$(TARGET) ./
 
 clean:

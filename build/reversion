@@ -1,13 +1,13 @@
 #!/bin/bash
 
-versionfile='src/version.h';
-
-major=$(grep -P 'MAJOR' $versionfile | sed -E 's/[^0-9]+//');
-minor=$(grep -P 'MINOR' $versionfile | sed -E 's/[^0-9]+//');
-build=$(grep -P 'BUILD' $versionfile | sed -E 's/[^0-9]+//');
-
 if [ -e 'build/.devel' ]
 	then
+
+	versionfile='src/version.h';
+
+	major=$(grep -P 'MAJOR' $versionfile | sed -E 's/[^0-9]+//');
+	minor=$(grep -P 'MINOR' $versionfile | sed -E 's/[^0-9]+//');
+	build=$(grep -P 'BUILD' $versionfile | sed -E 's/[^0-9]+//');
 
 	let 'build+=1';
 	
