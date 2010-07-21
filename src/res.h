@@ -1,12 +1,13 @@
 #ifndef RES_H
 #define RES_H
 
-#include <stdlib.h>
-#include <string.h>
+//#include <stdlib.h>
+//#include <string.h>
+#include "version.h"
 
-#define VERSION_MAJOR			1
-#define VERSION_MINOR			2
-#define VERSION_BUILD     18
+//#define VERSION_MAJOR			1
+//#define VERSION_MINOR			2
+//#define VERSION_BUILD     18
 //#define VERSION_REVISION  10
 
 char *helptext="\
