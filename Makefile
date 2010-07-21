@@ -8,8 +8,7 @@ TARGET    = tag
 
 SOURCE    = $(SRC_DIR)/tag.c\
 						$(SRC_DIR)/tfmanip.h\
-						$(SRC_DIR)/res.h\
-						$(SRC_DIR)/version.h
+						$(SRC_DIR)/res.h
 
 INSTALL_DIR = /usr/bin/
 
@@ -19,7 +18,7 @@ all: build
 build: $(TARGET)
 
 $(TARGET): $(SOURCE)
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/$(TARGET) $(SOURCE)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/$(TARGET) $(SOURCE) $(SRC_DIR)/version.h
 	./$(BUILD_DIR)/reversion
 	-mv -fu $(BUILD_DIR)/$(TARGET) ./
 
