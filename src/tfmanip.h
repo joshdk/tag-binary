@@ -9,15 +9,15 @@
 
 #define TAGFILE_FILENAME  ".tags"
 #define TAGFILE_MAGIC			0x73676174 //"tags"
-
-#define NAME_MAX 					255
+//*
+//#define NAME_MAX 					255
 #define NAME_BUFFER_SIZE 	256
 
-#define TAG_COUNT 				16
-#define TAG_BUFFER_SIZE 	16
+#define TAG_COUNT 				4//16
+#define TAG_BUFFER_SIZE 	4//16
 
 #define ROW_BUFFER_SIZE		(NAME_BUFFER_SIZE+TAG_BUFFER_SIZE*TAG_COUNT)
-
+//*/
 #define INVALID_OFFSET 		-1
 #define INVALID_SIZE			-1
 
@@ -27,31 +27,50 @@
 #define FALSE							0
 
 
-
+/*
 struct offsets{
 	int info;
 	int table;
 	int data;
 };
+//*/
 
-struct info{
-	int header;
-	unsigned char major,minor;
-	unsigned short build;//,verd;
+struct header{
+	unsigned int magic;
+	unsigned char major;
+	unsigned char minor;
+	unsigned short build;
 };
 
 struct table{
-	int virt,real;
+	unsigned int virt;
+	unsigned int real;
 };
+
+struct rowinfo{
+	unsigned short name_buffer_size;
+	unsigned char tag_count;
+	unsigned char tag_buffer_size;
+};
+/*
+struct rowold{
+	char name[NAME_BUFFER_SIZE+1];
+	char tags[TAG_COUNT][TAG_BUFFER_SIZE+1];
+};
+//*/
 
 struct row{
-	char name[NAME_BUFFER_SIZE+1],tags[TAG_COUNT][TAG_BUFFER_SIZE+1];
+	char *name;
+	char **tags;
 };
 
 
-int read_row(struct row *,FILE *);
+//int read_row(struct rowold *,FILE *);
+int read_row(struct row *,struct rowinfo *,FILE *);
+
 int search_tagfile(const char *,char **,int,FILE *);
 int query_tagfile(const char *,FILE *);
+int dump_tagfile(const char *);
 
 int extract_paths(const char *,char **,char **,char **);
 
@@ -91,14 +110,11 @@ int defrag_tagfile(FILE *ftags){
 
 
 
-int dump(const char *);
 
-int dump(const char *target){
+int dump_tagfile(const char *target){//updated
 
 	char *path,*name,*tagfile;
-	if(!extract_paths(target,&path,&name,&tagfile)){
-		return 0;
-	}
+	if(!extract_paths(target,&path,&name,&tagfile)){return 0;}
 	free(path);path=NULL;
 
 	FILE *ftags;
@@ -110,9 +126,10 @@ int dump(const char *target){
 
 
 	
-	struct info i={0};
-	fread(&i,sizeof(struct info),1,ftags);
-	if(i.header!=TAGFILE_MAGIC){
+	struct header i={0};
+	fread(&i,sizeof(struct header),1,ftags);
+	if(i.magic!=TAGFILE_MAGIC){
+		printf("bad file\n");
 		fclose(ftags);
 		free(name);name=NULL;
 		free(tagfile);tagfile=NULL;
@@ -121,8 +138,15 @@ int dump(const char *target){
 
 	printf("target file: %s\n",target);
 	printf("tagfile: %s\n",tagfile);
-	printf("magic: %x\n",i.header);
-	printf("version: %d.%d.%d\n",i.major,i.minor,i.build);//?"rc":"b"),i.verd);
+	printf("magic: %x\n",i.magic);
+	printf("version: %d.%d.%d\n",i.major,i.minor,i.build);
+	printf("\n");
+
+	struct rowinfo ri={0};
+	fread(&ri,sizeof(struct rowinfo),1,ftags);
+	printf("name buffer size: %d\n",ri.name_buffer_size);
+	printf("tag count: %d\n",ri.tag_count);
+	printf("tag buffer size: %d\n",ri.tag_buffer_size);
 	printf("\n");
 
 	struct table tdata={0};
@@ -131,19 +155,36 @@ int dump(const char *target){
 	printf("rows real: %d\n",tdata.real);
 	printf("\n");	
 
-	struct row rowdata={{0}};
+	//struct rowold rowdata2={{0}};
+	
+	//allocate all parts of the rowdata structure
+	struct row rowdata;
+	rowdata.name=malloc((ri.name_buffer_size+1)*sizeof(char));
+	rowdata.tags=malloc(ri.tag_count*sizeof(char*));
+	for(int n=0;n<ri.tag_count;++n){
+		rowdata.tags[n]=malloc((ri.tag_buffer_size+1)*sizeof(char));
+	}
+
 
 	for(int i=0;i<tdata.virt;++i){//for every table entry
-		read_row(&rowdata,ftags);//read one row
+		read_row(&rowdata,&ri,ftags);//read one row
 		if(rowdata.name[0]=='\0')continue;//ignore empty rows
 		printf("%s\n",rowdata.name);
-		for(int n=0;n<TAG_COUNT;++n){
+		for(int n=0;n<ri.tag_count;++n){
 			if(rowdata.tags[n][0]=='\0')continue;
 			printf("  %s\n",rowdata.tags[n]);
 		}
 
 	}
 	
+	//free all parts of the rowdata structure
+	for(int n=0;n<ri.tag_count;++n){
+		free(rowdata.tags[n]);rowdata.tags[n]=NULL;
+	}
+	free(rowdata.tags);rowdata.tags=NULL;
+	free(rowdata.name);rowdata.name=NULL;
+
+
 	fclose(ftags);
 	free(name);name=NULL;
 	free(tagfile);tagfile=NULL;
@@ -156,53 +197,128 @@ int dump(const char *target){
 
 
 
+int read_row(struct row *rowdata,struct rowinfo *ri,FILE *ftags){//updated
+	//if(rowdata==NULL||ri==NULL)return 0;
+	fread(rowdata->name,sizeof(char),ri->name_buffer_size,ftags);
+	for(int n=0;n<ri->tag_count;++n){
+		fread(rowdata->tags[n],sizeof(char),ri->tag_buffer_size,ftags);
+	}
+	return 1;
+}
 
 
-
-
-int read_row(struct row *entry,FILE *ftags){
+/*
+int read_row(struct rowold *entry,FILE *ftags){
 	fread(entry->name,sizeof(char),NAME_BUFFER_SIZE,ftags);
 	for(int n=0;n<TAG_COUNT;++n){
 		fread(entry->tags[n],sizeof(char),TAG_BUFFER_SIZE,ftags);
 	}
 	return 1;
 }
+//*/
 
 
-int search_tagfile(const char *path,char **tags,int tagc,FILE *ftags){
 
-	struct info i={0};
-	fread(&i,sizeof(struct info),1,ftags);
-	if(i.header!=TAGFILE_MAGIC){return 0;}
+
+
+int query_tagfile(const char *name,FILE *ftags){//updated
+
+	struct header i={0};
+	fread(&i,sizeof(struct header),1,ftags);
+	if(i.magic!=TAGFILE_MAGIC){return 0;}
+
+	struct rowinfo ri={0};
+	fread(&ri,sizeof(struct rowinfo),1,ftags);
+	
+
+	struct table tdata={0};
+	fread(&tdata,sizeof(struct table),1,ftags);
+
+	//allocate all parts of the rowdata structure
+	struct row rowdata={0};
+	rowdata.name=malloc(ri.name_buffer_size*sizeof(char));
+	rowdata.tags=malloc(ri.tag_count*sizeof(char*));
+	for(int n=0;n<ri.tag_count;++n){
+		rowdata.tags[n]=malloc(ri.tag_buffer_size*sizeof(char));
+	}
+	
+	for(int i=0;i<tdata.virt;++i){
+	
+		read_row(&rowdata,&ri,ftags);
+		if(!strcmp(rowdata.name,name)){//if the names match
+			for(int n=0;n<ri.tag_count;++n){
+				if(rowdata.tags[n][0]!='\0'){
+					printf("(:) %s\n",rowdata.tags[n]);
+				}
+			}
+			break;//print the first result only
+		}
+	}
+
+	//free all parts of the rowdata structure
+	for(int n=0;n<ri.tag_count;++n){
+		free(rowdata.tags[n]);rowdata.tags[n]=NULL;
+	}
+	free(rowdata.tags);rowdata.tags=NULL;
+	free(rowdata.name);rowdata.name=NULL;
+
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+int search_tagfile(const char *path,char **tags,int tagc,FILE *ftags){//updated
+
+	struct header i={0};
+	fread(&i,sizeof(struct header),1,ftags);
+	if(i.magic!=TAGFILE_MAGIC){return 0;}
+
+	struct rowinfo ri={0};
+	fread(&ri,sizeof(struct rowinfo),1,ftags);
+	
 
 	struct table tdata={0};
 	fread(&tdata,sizeof(struct table),1,ftags);
 	
-	struct row rowdata={{0}};
+	//struct rowold rowdata={{0}};
+	struct row rowdata;
+	rowdata.name=malloc((ri.name_buffer_size+1)*sizeof(char));
+	rowdata.tags=malloc(ri.tag_count*sizeof(char*));
+	for(int n=0;n<ri.tag_count;++n){
+		rowdata.tags[n]=malloc((ri.tag_buffer_size+1)*sizeof(char));
+	}
 
 	for(int i=0;i<tdata.virt;++i){//for every table entry
-		read_row(&rowdata,ftags);//read one row
+		read_row(&rowdata,&ri,ftags);//read one row
 		if(rowdata.name[0]=='\0')continue;//ignore empty rows
 		
 		int valid=0,trip=0;
 		for(int n=0;n<tagc;++n){//for every tag rule
 			
 			if(tags[n][0]=='-'){//exact, contain absolutely none
-				for(int m=0;m<TAG_COUNT;++m){
+				for(int m=0;m<ri.tag_count;++m){
 					if(!strcmp(rowdata.tags[m],tags[n]+1)){//as soon as we find an ilegal tag, stop checking rules
 						valid=0;trip=1;break;
 					}
 				}
 				
 			}else if(tags[n][0]==':'){//partial, contains at least one
-				for(int m=0;m<TAG_COUNT;++m){
+				for(int m=0;m<ri.tag_count;++m){
 					if(contains_str(rowdata.tags[m],tags[n]+1)){//found a match via a partial tag
 						valid=1;break;
 					}
 				}
 				
 			}else if(tags[n][0]=='.'){//partial, contains absolutely none
-				for(int m=0;m<TAG_COUNT;++m){
+				for(int m=0;m<ri.tag_count;++m){
 					if(contains_str(rowdata.tags[m],tags[n]+1)){//found a match via a partial tag
 						valid=0;trip=1;break;
 					}
@@ -210,7 +326,7 @@ int search_tagfile(const char *path,char **tags,int tagc,FILE *ftags){
 
 			}else{
 				int mod=tags[n][0]=='+';//exact, contains at least one
-				for(int m=0;m<TAG_COUNT;++m){
+				for(int m=0;m<ri.tag_count;++m){
 					if(!strcmp(rowdata.tags[m],tags[n]+mod)){//found a match via an exact tag
 						valid=1;break;
 					}
@@ -233,6 +349,14 @@ int search_tagfile(const char *path,char **tags,int tagc,FILE *ftags){
 
 	}
 
+
+	//free all parts of the rowdata structure
+	for(int n=0;n<ri.tag_count;++n){
+		free(rowdata.tags[n]);rowdata.tags[n]=NULL;
+	}
+	free(rowdata.tags);rowdata.tags=NULL;
+	free(rowdata.name);rowdata.name=NULL;
+
 return 1;
 }
 
@@ -240,32 +364,6 @@ return 1;
 
 
 
-int query_tagfile(const char *name,FILE *ftags){
-
-	struct info i={0};
-	fread(&i,sizeof(struct info),1,ftags);
-	if(i.header!=TAGFILE_MAGIC){return 0;}
-
-	struct table tdata={0};
-	fread(&tdata,sizeof(struct table),1,ftags);
-	
-	struct row rowdata={{0}};
-	
-	for(int i=0;i<tdata.virt;++i){
-	
-		read_row(&rowdata,ftags);
-		if(!strcmp(rowdata.name,name)){//if the names match
-			for(int n=0;n<TAG_COUNT;++n){
-				if(rowdata.tags[n][0]!='\0'){
-					printf("%s\n",rowdata.tags[n]);
-				}
-			}
-			break;//prin the first result only
-		}
-	}
-
-	return 1;
-}
 
 
 
