@@ -13,8 +13,8 @@
 //#define NAME_MAX 					255
 #define NAME_BUFFER_SIZE 	256
 
-#define TAG_COUNT 				4//16
-#define TAG_BUFFER_SIZE 	4//16
+#define TAG_COUNT 				16
+#define TAG_BUFFER_SIZE 	16
 
 #define ROW_BUFFER_SIZE		(NAME_BUFFER_SIZE+TAG_BUFFER_SIZE*TAG_COUNT)
 //*/
