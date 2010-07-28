@@ -37,7 +37,6 @@ int main(int argc,char **argv){
 		return 0;
 	}
 
-
 	if(!strcmp(argv[1],"-t") || !strcmp(argv[1],"--tag")){//tag a file
 			tag_tagfile(argv[argc-1],(const char **)argv+2,argc-3);
 
@@ -62,7 +61,6 @@ int main(int argc,char **argv){
 			}
 			search(path,(const char **)argv+2,argc-3);
 			free(path);path=NULL;
-
 
 	}else if(!strcmp(argv[1],"-d") || !strcmp(argv[1],"--dump")){//dump file tags
 		dump_tagfile(argv[argc-1]);

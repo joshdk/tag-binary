@@ -18,24 +18,27 @@
 #define INVALID_OFFSET 		-1
 #define INVALID_SIZE			-1
 
-//#define DEFRAG_RATIO      0.875
+#define DEFRAG_RATIO      0.750
+#define DEFRAG_THRESHOLD  16
 
 
 int lstat(const char *path, struct stat *buf);
+int ftruncate(int,int);
+int fileno(FILE *);
 
-struct header{
+struct header{//8 bytes
 	unsigned int magic;
 	unsigned char major;
 	unsigned char minor;
 	unsigned short build;
 };
 
-struct table{
+struct table{//8 bytes
 	unsigned int virt;
 	unsigned int real;
 };
 
-struct rowinfo{
+struct rowinfo{//4 bytes
 	unsigned short name_buffer_size;
 	unsigned char tag_count;
 	unsigned char tag_buffer_size;
@@ -65,7 +68,7 @@ int dump_tagfile(const char *);
 int contains(const char *,const char *);
 int extract_paths(const char *,char **,char **,char **);
 
-
+int defrag_tagfile(struct table *,struct rowinfo *,FILE *);
 
 
 struct row *create_rowdata(struct rowinfo *ri){
@@ -297,21 +300,74 @@ int tag_tagfile(const char *target,const char **tags,int tagc){
 		if(existing){--tdata.real;}
 	}
 
-	//update size of virual and real entries
-	fseek(ftags,entries_offset,SEEK_SET);
-	fwrite(&tdata,sizeof(struct table),1,ftags);
-	/*
-	if(((double)tdata.real)/((double)tdata.virt) <= DEFRAG_RATIO){//too many empty rows in the file, time to defrag it
-		//TODO: defrag tagfile
+	if(tdata.virt>=DEFRAG_THRESHOLD && tdata.virt!=0){
+		if(((double)tdata.real)/((double)tdata.virt) <= DEFRAG_RATIO){//too many empty rows in the file, time to defrag it
+			fseek(ftags,sizeof(struct header)+sizeof(struct rowinfo)+sizeof(struct table),SEEK_SET);
+			defrag_tagfile(&tdata,&ri,ftags);
+		}
 	}
-	//*/
+	//update size of virual and real entries
+	fseek(ftags,sizeof(struct header)+sizeof(struct rowinfo),SEEK_SET);
+	fwrite(&tdata,sizeof(struct table),1,ftags);
+
 	fclose(ftags);
 	free(path);path=NULL;
 	free(name);name=NULL;
 	free(tagfile);tagfile=NULL;
-
 	return 1;
 }
+
+
+
+int defrag_tagfile(struct table *tdata,struct rowinfo *ri,FILE *ftags){
+	int read_pointer=ftell(ftags);
+	int write_pointer=read_pointer;
+	int row_buffer_size=ri->name_buffer_size+ri->tag_count*ri->tag_buffer_size;
+
+	//printf("defragging\n");
+
+	struct row *rowdata=create_rowdata(ri);
+
+	for(unsigned int i=0;i<tdata->virt;++i){//for every table entry
+		//rowdata->name[0]='\0';//zero it out
+
+		fseek(ftags,read_pointer,SEEK_SET);
+		read_row(rowdata,ri,ftags);//read one row
+		//printf("read  @ %d - name: [%s]\n",read_pointer,rowdata->name);
+		read_pointer+=row_buffer_size;
+		fflush(ftags);
+
+		if(rowdata->name[0]!='\0'){
+			if(write_pointer!=read_pointer){//no reason to overwrite data with identical data...
+				fseek(ftags,write_pointer,SEEK_SET);
+				write_row(rowdata,ri,ftags);
+				//printf("write @ %d - name: [%s]\n",write_pointer,rowdata->name);
+				write_pointer+=row_buffer_size;
+				fflush(ftags);				
+			}
+		}
+	}
+	
+	destroy_rowdata(rowdata,ri);
+	//printf("truncating to [%d] bytes\n",write_pointer);
+	if(ftruncate(fileno(ftags),write_pointer)!=0){return 0;}
+
+	tdata->virt=tdata->real;
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
