@@ -1,17 +1,6 @@
 tag- Simple file tagging and searching
 ================================
 
-Build Options
---------------
-
-* **download**: Download the source to your computer
-
-* **extract**: Unpack the tarball or zip archive
-
-* **point**: `cd` inside of the unpacked directory
-
-* **install**: Just run `make install` as root
-
 How to use tag
 -----------------------------
 

@@ -21,12 +21,12 @@ int main(int argc,char **argv){
 		return 0;
 	}
 	
-	if(!strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")){
+	if(!strcmp(argv[1],"--help")){
 		printf(helptext);
 		return 0;
 	}
 	
-	if(!strcmp(argv[1],"-v") || !strcmp(argv[1],"--version")){
+	if(!strcmp(argv[1],"--version")){
 		printf(versiontext,VERSION_MAJOR,VERSION_MINOR,VERSION_BUILD);
 		return 0;
 	}
@@ -37,10 +37,10 @@ int main(int argc,char **argv){
 		return 0;
 	}
 
-	if(!strcmp(argv[1],"-t") || !strcmp(argv[1],"--tag")){//tag a file
+	if(!strcmp(argv[1],"-t")){//tag a file
 			tag_tagfile(argv[argc-1],(const char **)argv+2,argc-3);
 
-	}else if(!strcmp(argv[1],"-f") || !strcmp(argv[1],"--find")){//find file(s)
+	}else if(!strcmp(argv[1],"-f")){//find file(s)
 		//printf("find mode\n");
 		struct stat s;
 		if(lstat(argv[argc-1],&s)){
@@ -62,11 +62,11 @@ int main(int argc,char **argv){
 			search(path,(const char **)argv+2,argc-3);
 			free(path);path=NULL;
 
-	}else if(!strcmp(argv[1],"-d") || !strcmp(argv[1],"--dump")){//dump file tags
+	}else if(!strcmp(argv[1],"-d")){//dump file tags
 		dump_tagfile(argv[argc-1]);
 		
 
-	}else if(!strcmp(argv[1],"-q") || !strcmp(argv[1],"--query")){//query file tags
+	}else if(!strcmp(argv[1],"-q")){//query file tags
 		query_file(argv[argc-1]);
 
 	}else{
