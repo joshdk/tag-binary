@@ -1,14 +1,14 @@
 CC        = gcc
 CFLAGS    = -std=c99 -Wall -Wextra
 
-SRC_DIR   = src/
-BUILD_DIR = build/
+SRC_DIR   = ./src/
+BUILD_DIR = ./build/
 
-TARGET    = tag
+TARGET    = ./tag
 
-SOURCE    = $(SRC_DIR)/tag.c\
-            $(SRC_DIR)/tfmanip.h\
-            $(SRC_DIR)/res.h
+SOURCE    = $(SRC_DIR)tag.c\
+            $(SRC_DIR)tfmanip.h\
+            $(SRC_DIR)res.h
 
 INSTALL_DIR = /usr/bin/
 
@@ -19,7 +19,7 @@ all: build
 build: $(TARGET)
 
 $(TARGET): $(SOURCE)
-	@echo "Building target:"
+	@echo "Building tag:"
 	@$(CC) $(CFLAGS) -o $(BUILD_DIR)$(TARGET) $(SOURCE) $(SRC_DIR)version.h
 	@mv -fu $(BUILD_DIR)$(TARGET) ./
 	@./$(BUILD_DIR)reversion
@@ -33,11 +33,12 @@ clean:
 rebuild: clean build
 
 install: build
-	@echo "Installing target:"
+	@echo "Installing tag:"
 	@cp -f $(TARGET) $(INSTALL_DIR)
 	@echo -e $(SUCCESS_MSG)
 
 uninstall:
-	@echo "Uninstalling target:"
+	@echo "Uninstalling tag:"
 	@rm -f $(INSTALL_DIR)$(TARGET)
 	@echo -e $(SUCCESS_MSG)
+
