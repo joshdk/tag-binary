@@ -1,14 +1,18 @@
 CC        = gcc
 CFLAGS    = -std=c99 -Wall -Wextra
 
-SRC_DIR   = ./src/
-BUILD_DIR = ./build/
+SRC_DIR   = src/
+BUILD_DIR = build/
 
-TARGET    = ./tag
+TARGET    = tag
 
-SOURCE    = $(SRC_DIR)tag.c\
-            $(SRC_DIR)tfmanip.h\
-            $(SRC_DIR)res.h
+SOURCE    = $(SRC_DIR)filesys.c\
+            $(SRC_DIR)filesys.h\
+            $(SRC_DIR)res.h\
+            $(SRC_DIR)tagbd.c\
+            $(SRC_DIR)tag.c\
+						$(SRC_DIR)tagdb.h
+						
 
 INSTALL_DIR = /usr/bin/
 

@@ -4,7 +4,8 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
-#include "tfmanip.h"
+#include "filesys.h"
+#include "tagdb.h"
 #include "res.h"
 
 void search(const char *,const char **,int);
@@ -63,7 +64,7 @@ int main(int argc,char **argv){
 			free(path);path=NULL;
 
 	}else if(!strcmp(argv[1],"-d")){//dump file tags
-		dump_tagfile(argv[argc-1]);
+		//dump_tagfile(argv[argc-1]);
 		
 
 	}else if(!strcmp(argv[1],"-q")){//query file tags
