@@ -3,24 +3,6 @@
 
 #include "tagdb.h"
 
-void quote_output(const char *text){
-	int text_len=strlen(text);
-	const char escape[]="\a\b\f\n\r\t\v\"\\";
-	const char *replace[]={"\\a","\\b","\\f","\\n","\\r","\\t","\\v","\\\"","\\\\"};
-	int esc_len=strlen(escape);
-	for(int n=0;n<text_len;++n){
-		int trip=1;
-		for(int m=0;m<esc_len;++m){
-			if(escape[m]==text[n]){
-				trip=0;
-				printf(replace[m]);
-				break;
-			}
-		}
-		if(trip)printf("%c",text[n]);
-	}
-}
-
 
 
 
@@ -324,18 +306,11 @@ int search_tagfile(const char *path,const char **tags,int tagc,FILE *ftags){//up
 		}
 		
 		if(valid){//if this row matches the rules
-			quote_output(path);
-			if(strcmp(rowdata->name,".")){
-				quote_output(rowdata->name);
-			}
-			puts("");
-/*
 			if(strcmp(rowdata->name,".")){
 				printf("%s%s\n",path,rowdata->name);
 			}else{
 				printf("%s\n",path);//ignore entries with the name of "."
 			}
-//*/
 		}
 
 	}

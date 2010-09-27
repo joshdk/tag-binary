@@ -243,4 +243,25 @@ int contains(const char *str,const char *sub){
 }
 //*/
 
+/*
+void quote_output(const char *text){
+	int text_len=strlen(text);
+	const char escape[]="\a\b\f\n\r\t\v\"\\";
+	const char *replace[]={"\\a","\\b","\\f","\\n","\\r","\\t","\\v","\\\"","\\\\"};
+	int esc_len=strlen(escape);
+	for(int n=0;n<text_len;++n){
+		int trip=1;
+		for(int m=0;m<esc_len;++m){
+			if(escape[m]==text[n]){
+				trip=0;
+				printf(replace[m]);
+				break;
+			}
+		}
+		if(trip)printf("%c",text[n]);
+	}
+}
+//*/
+
+
 #endif 
