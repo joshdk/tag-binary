@@ -86,11 +86,6 @@ AUTHOR
        Written by Josh Komoroske.
 
 
-REPORTING BUGS
-       Report bugs to jdkomo.dev@gmail.com
-       tag source code repository: <http://github.com/sigint/tag>
-
-
 COPYRIGHT
        Copyright © 2010 Josh Komoroske License BSD:
        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
