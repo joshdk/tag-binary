@@ -4,9 +4,6 @@
 #include "tagdb.h"
 
 
-
-
-
 struct row *create_rowdata(struct rowinfo *ri){
 	struct row *rowdata=malloc(sizeof(struct row));
 	rowdata->name=calloc(ri->name_buffer_size+1,sizeof(char));

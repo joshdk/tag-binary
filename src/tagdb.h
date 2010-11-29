@@ -9,18 +9,18 @@
 #include "version.h"
 //#include "res.h"
 
-#define NAME_BUFFER_SIZE 	256
-#define TAG_COUNT 				8
-#define TAG_BUFFER_SIZE 	8
+#define NAME_BUFFER_SIZE     256
+#define TAG_COUNT            8
+#define TAG_BUFFER_SIZE      8
 
-#define TAGFILE_FILENAME  ".tags"
-#define TAGFILE_MAGIC			0x73676174 //"tags"
+#define TAGFILE_FILENAME     ".tags"
+#define TAGFILE_MAGIC        0x73676174 //"tags"
 
-#define INVALID_OFFSET 		-1
-#define INVALID_SIZE			-1
+#define INVALID_OFFSET       -1
+#define INVALID_SIZE         -1
 
-#define DEFRAG_RATIO      0.750
-#define DEFRAG_THRESHOLD  16
+#define DEFRAG_RATIO         0.750
+#define DEFRAG_THRESHOLD     16
 
 
 int lstat(const char *path, struct stat *buf);
@@ -49,6 +49,16 @@ struct row{
 	char *name;
 	char **tags;
 };
+
+struct tagbd{
+	struct header *header;
+	struct table *table;
+	struct rowinfo *info;
+	struct row *rows;
+	int count;
+};
+
+
 
 struct row *create_rowdata(struct rowinfo *);
 void destroy_rowdata(struct row *,struct rowinfo *);
